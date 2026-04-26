@@ -330,7 +330,31 @@ function NakoUI:CreateWindow(config)
                 
                 JoinButton.MouseButton1Click:Connect(function()
                     if config.KeySettings.ButtonLink then
+                        -- Try to open link in browser
+                        pcall(function()
+                            if syn and syn.request then
+                                syn.request({
+                                    Url = "http://127.0.0.1:6463/rpc?v=1",
+                                    Method = "POST",
+                                    Headers = {
+                                        ["Content-Type"] = "application/json",
+                                        ["Origin"] = "https://discord.com"
+                                    },
+                                    Body = game:GetService("HttpService"):JSONEncode({
+                                        cmd = "INVITE_BROWSER",
+                                        args = {code = config.KeySettings.ButtonLink},
+                                        nonce = game:GetService("HttpService"):GenerateGUID(false)
+                                    })
+                                })
+                            end
+                        end)
+                        -- Always copy to clipboard as backup
                         setclipboard(config.KeySettings.ButtonLink)
+                        
+                        -- Show notification
+                        KeyNote.Text = "Link copied to clipboard!"
+                        wait(2)
+                        KeyNote.Text = config.KeySettings.Note or ""
                     end
                 end)
                 
@@ -1239,6 +1263,54 @@ function NakoUI:CreateWindow(config)
     end
     
     return WindowManager
+end
+
+-- Notification System
+function NakoUI:Notify(config)
+    local NotificationFrame = Instance.new("Frame")
+    NotificationFrame.Size = UDim2.new(0, 300, 0, 80)
+    NotificationFrame.Position = UDim2.new(1, -320, 1, 100)
+    NotificationFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    NotificationFrame.BorderSizePixel = 0
+    NotificationFrame.Parent = CoreGui:FindFirstChild("NakoUI_Notifications") or Instance.new("ScreenGui", CoreGui)
+    NotificationFrame.Parent.Name = "NakoUI_Notifications"
+    NotificationFrame.Parent.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    local NotifCorner = Instance.new("UICorner")
+    NotifCorner.CornerRadius = UDim.new(0, 10)
+    NotifCorner.Parent = NotificationFrame
+    
+    local NotifTitle = Instance.new("TextLabel")
+    NotifTitle.Size = UDim2.new(1, -20, 0, 25)
+    NotifTitle.Position = UDim2.new(0, 10, 0, 10)
+    NotifTitle.BackgroundTransparency = 1
+    NotifTitle.Text = config.Title or "Notification"
+    NotifTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NotifTitle.TextSize = 16
+    NotifTitle.Font = Enum.Font.GothamBold
+    NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
+    NotifTitle.Parent = NotificationFrame
+    
+    local NotifContent = Instance.new("TextLabel")
+    NotifContent.Size = UDim2.new(1, -20, 0, 35)
+    NotifContent.Position = UDim2.new(0, 10, 0, 35)
+    NotifContent.BackgroundTransparency = 1
+    NotifContent.Text = config.Content or ""
+    NotifContent.TextColor3 = Color3.fromRGB(200, 200, 200)
+    NotifContent.TextSize = 13
+    NotifContent.Font = Enum.Font.Gotham
+    NotifContent.TextXAlignment = Enum.TextXAlignment.Left
+    NotifContent.TextWrapped = true
+    NotifContent.Parent = NotificationFrame
+    
+    -- Slide in animation
+    Tween(NotificationFrame, {Position = UDim2.new(1, -320, 1, -100)}, 0.5, Enum.EasingStyle.Back)
+    
+    -- Auto dismiss
+    wait(config.Duration or 3)
+    Tween(NotificationFrame, {Position = UDim2.new(1, -320, 1, 100)}, 0.3)
+    wait(0.3)
+    NotificationFrame:Destroy()
 end
 
 return NakoUI
