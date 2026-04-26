@@ -512,7 +512,15 @@ function NakoUI:CreateWindow(config)
         table.insert(WindowManager.Tabs, TabManager)
         
         if #WindowManager.Tabs == 1 then
-            TabButton.MouseButton1Click:Fire()
+            -- Activate first tab automatically
+            task.spawn(function()
+                wait(0.1)
+                TabContent.Visible = true
+                TabButton.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
+                TabIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+                TabLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                WindowManager.CurrentTab = TabManager
+            end)
         end
         
         -- Create Button
@@ -1267,50 +1275,58 @@ end
 
 -- Notification System
 function NakoUI:Notify(config)
-    local NotificationFrame = Instance.new("Frame")
-    NotificationFrame.Size = UDim2.new(0, 300, 0, 80)
-    NotificationFrame.Position = UDim2.new(1, -320, 1, 100)
-    NotificationFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    NotificationFrame.BorderSizePixel = 0
-    NotificationFrame.Parent = CoreGui:FindFirstChild("NakoUI_Notifications") or Instance.new("ScreenGui", CoreGui)
-    NotificationFrame.Parent.Name = "NakoUI_Notifications"
-    NotificationFrame.Parent.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    local NotifCorner = Instance.new("UICorner")
-    NotifCorner.CornerRadius = UDim.new(0, 10)
-    NotifCorner.Parent = NotificationFrame
-    
-    local NotifTitle = Instance.new("TextLabel")
-    NotifTitle.Size = UDim2.new(1, -20, 0, 25)
-    NotifTitle.Position = UDim2.new(0, 10, 0, 10)
-    NotifTitle.BackgroundTransparency = 1
-    NotifTitle.Text = config.Title or "Notification"
-    NotifTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NotifTitle.TextSize = 16
-    NotifTitle.Font = Enum.Font.GothamBold
-    NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
-    NotifTitle.Parent = NotificationFrame
-    
-    local NotifContent = Instance.new("TextLabel")
-    NotifContent.Size = UDim2.new(1, -20, 0, 35)
-    NotifContent.Position = UDim2.new(0, 10, 0, 35)
-    NotifContent.BackgroundTransparency = 1
-    NotifContent.Text = config.Content or ""
-    NotifContent.TextColor3 = Color3.fromRGB(200, 200, 200)
-    NotifContent.TextSize = 13
-    NotifContent.Font = Enum.Font.Gotham
-    NotifContent.TextXAlignment = Enum.TextXAlignment.Left
-    NotifContent.TextWrapped = true
-    NotifContent.Parent = NotificationFrame
-    
-    -- Slide in animation
-    Tween(NotificationFrame, {Position = UDim2.new(1, -320, 1, -100)}, 0.5, Enum.EasingStyle.Back)
-    
-    -- Auto dismiss
-    wait(config.Duration or 3)
-    Tween(NotificationFrame, {Position = UDim2.new(1, -320, 1, 100)}, 0.3)
-    wait(0.3)
-    NotificationFrame:Destroy()
+    task.spawn(function()
+        local notifGui = CoreGui:FindFirstChild("NakoUI_Notifications")
+        if not notifGui then
+            notifGui = Instance.new("ScreenGui")
+            notifGui.Name = "NakoUI_Notifications"
+            notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            notifGui.Parent = CoreGui
+        end
+        
+        local NotificationFrame = Instance.new("Frame")
+        NotificationFrame.Size = UDim2.new(0, 300, 0, 80)
+        NotificationFrame.Position = UDim2.new(1, -320, 1, 100)
+        NotificationFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        NotificationFrame.BorderSizePixel = 0
+        NotificationFrame.Parent = notifGui
+        
+        local NotifCorner = Instance.new("UICorner")
+        NotifCorner.CornerRadius = UDim.new(0, 10)
+        NotifCorner.Parent = NotificationFrame
+        
+        local NotifTitle = Instance.new("TextLabel")
+        NotifTitle.Size = UDim2.new(1, -20, 0, 25)
+        NotifTitle.Position = UDim2.new(0, 10, 0, 10)
+        NotifTitle.BackgroundTransparency = 1
+        NotifTitle.Text = config.Title or "Notification"
+        NotifTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        NotifTitle.TextSize = 16
+        NotifTitle.Font = Enum.Font.GothamBold
+        NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
+        NotifTitle.Parent = NotificationFrame
+        
+        local NotifContent = Instance.new("TextLabel")
+        NotifContent.Size = UDim2.new(1, -20, 0, 35)
+        NotifContent.Position = UDim2.new(0, 10, 0, 35)
+        NotifContent.BackgroundTransparency = 1
+        NotifContent.Text = config.Content or ""
+        NotifContent.TextColor3 = Color3.fromRGB(200, 200, 200)
+        NotifContent.TextSize = 13
+        NotifContent.Font = Enum.Font.Gotham
+        NotifContent.TextXAlignment = Enum.TextXAlignment.Left
+        NotifContent.TextWrapped = true
+        NotifContent.Parent = NotificationFrame
+        
+        -- Slide in animation
+        Tween(NotificationFrame, {Position = UDim2.new(1, -320, 1, -100)}, 0.5, Enum.EasingStyle.Back)
+        
+        -- Auto dismiss
+        task.wait(config.Duration or 3)
+        Tween(NotificationFrame, {Position = UDim2.new(1, -320, 1, 100)}, 0.3)
+        task.wait(0.3)
+        NotificationFrame:Destroy()
+    end)
 end
 
 return NakoUI
